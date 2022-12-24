@@ -4,7 +4,6 @@ from django.contrib.auth.decorators import login_required
 import requests
 from django.contrib import messages
 from django.http import HttpResponse
-from .models import Profile
 
 # Create your views here.
 
@@ -33,12 +32,9 @@ def signin(request):
 
         user = auth.authenticate(username=username)
 
-        if user is not None:
-            auth.login(request, user)
-            return redirect('/')
-        else:
-            messages.info(request, 'User does not exist')
-            return redirect('signin')
+        auth.login(request, user)
+        return redirect('index')
+        
     else:    
         return render(request, 'signin.html')
 
