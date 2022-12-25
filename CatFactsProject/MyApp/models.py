@@ -9,8 +9,8 @@ class Fact(models.Model):
     id_facts = models.IntegerField()
     facts = models.CharField(max_length=300)
 
-    def __str__(self) -> str:
-        return self.facts
+    #def __str__(self) -> str:
+    #    return self.facts
 
 class Likes(models.Model):
     id_facts = models.ForeignKey(Fact, on_delete=models.CASCADE)
