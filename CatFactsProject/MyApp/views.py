@@ -8,19 +8,40 @@ from django.contrib.auth.decorators import login_required
 import requests
 from django.contrib import messages
 from django.http import HttpResponse
+import random
 import json
 
 # Create your views here.
 
 #@login_required(login_url='signin')
 def index(request):
-    response = requests.get('https://catfact.ninja/fact?max_length=140')
-    data = response.json()
-    dataToDict = json.dumps(data)
+    lista = []
+    for i in range (4):
+        if request.method == 'GET':
+            response = requests.get('https://catfact.ninja/fact?max_length=140') 
+            data = response.json()
+            dataToDict = json.dumps(data)
+            fact = json.dumps(dataToDict[10:-17])
+            new_fact = Fact.objects.create(facts=fact)
+            new_fact.save()
+            lista.append(new_fact)
+        else:
+            return redirect('/')
+    
+    #rand = random.choice(lista)
+    #print(lista)
+    #print(rand)
+    #Fact.save()
 
-    Fact = json.dumps(dataToDict[10:])
+    #facts = Fact.objects.all
+        #print(lista)        
+    #rand = random.choice(lista)
 
-    return render(request, 'index.html', {'facts': Fact})
+    return render(request, 'index.html', {'facts1': lista[0], 'facts2':lista[1],'facts3': lista[2], 'facts4':lista[3]})
+
+#@login_required(login_url='signin')
+def like_post(request):
+    pass
 
 def signup(request):
 	if request.method == "POST":
