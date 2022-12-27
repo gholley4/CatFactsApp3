@@ -3,7 +3,7 @@ from .forms import NewUserForm
 from django.contrib.auth import login
 from django.contrib import messages
 from django.contrib.auth.models import User, auth
-from .models import Fact
+from .models import Fact, Likes
 from django.contrib.auth.decorators import login_required
 import requests
 from django.contrib import messages
@@ -16,7 +16,7 @@ import json
 #@login_required(login_url='signin')
 def index(request):
     lista = []
-    for i in range (4):
+    for i in range (10):
         if request.method == 'GET':
             response = requests.get('https://catfact.ninja/fact?max_length=140') 
             data = response.json()
@@ -36,12 +36,31 @@ def index(request):
     #facts = Fact.objects.all
         #print(lista)        
     #rand = random.choice(lista)
-
-    return render(request, 'index.html', {'facts1': lista[0], 'facts2':lista[1],'facts3': lista[2], 'facts4':lista[3]})
+    facts = Fact.objects.all()[:5]
+    facts2 = Fact.objects.all()[5:10]
+    #likedFacts = Likes.objects.filter(username__isnull=False)
+    return render(request, 'index.html', {'facts':facts, 'facts2':facts2})
 
 #@login_required(login_url='signin')
 def like_post(request):
-    pass
+    username = request.user.username
+    id_facts = request.GET.get('id_facts')
+
+    fact = Fact.objects.get(id_facts=id_facts)
+
+    like_filter = Likes.objects.filter(id_facts=id_facts, username=username).first()
+
+    if like_filter == None:
+        new_like = Likes.objects.create(id_facts=id_facts, username=username)
+        new_like.save()
+        fact.no_of_likes = fact.no_of_likes+1
+        fact.save()
+        return redirect('index')
+    else:
+        like_filter.delete()
+        fact.no_of_likes = fact.no_of_likes-1
+        fact.save
+        return redirect('index')
 
 def signup(request):
 	if request.method == "POST":

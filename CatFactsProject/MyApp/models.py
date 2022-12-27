@@ -14,10 +14,12 @@ class Fact(models.Model):
     def __str__(self) -> str:
         return self.facts
 
-#class Likes(models.Model):
-    #id_facts = models.ForeignKey(Fact, on_delete=models.CASCADE)
-    #id_user = models.ForeignKey(get_user_model, on_delete=models.CASCADE) 
+class Likes(models.Model):
+    id_facts = models.CharField(max_length=500)
+    username = models.CharField(max_length=100) 
 
+    def __str__(self):
+        return self.username
 #class Favoritos(models.Model):
     #id_facts = models.ForeignKey(Fact, on_delete=models.CASCADE)
     #nro_likes = models.IntegerField(default=0)
