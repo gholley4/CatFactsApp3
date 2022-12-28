@@ -1,3 +1,6 @@
 
 CatFactsProject/db.sqlite3
 CatFactsProject/db.sqlite3
+
+# Unnecesary lock files present in Linux
+.~lock*
