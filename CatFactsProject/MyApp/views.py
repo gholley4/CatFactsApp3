@@ -10,11 +10,60 @@ from django.contrib import messages
 from django.http import HttpResponse
 import random
 import json
+from functools import reduce as functools_reduce
 
 # Create your views here.
 
+# Esto ayuda a facilitar cambios de código
+CAT_FACTS_LIMIT = 10  
+CAT_FACTS_MAX_LENGTH = 140
+CAT_FACTS_API_ENDPOINT = lambda mlength, limit: \
+    f'https://catfact.ninja/facts?max_length={mlength}&limit={limit}'
+
 #@login_required(login_url='signin')
 def index(request):
+    '''
+    Aqui Es bueno explicar un poco lo que esperamos hacer aqui, hay una buena 
+    convención, que es el formato de documentación de métodos de google 
+    disponible acá:
+    https://google.github.io/styleguide/pyguide.html#383-functions-and-methods
+    Esto es válido para todo lenguaje de programación, sobretodo si nuestra
+    función hace cosas muy puntuales y peculiares. Recuerda siempre que nuestros
+    programas son escritos para otros programadores, que uno individualmente lo
+    entienda no garantiza que es una buena documentación/explicación
+    '''
+    # Te Dejo aqui mi propuesta de implementación 
+    def create_fact(cat_fact: str):
+        fact_created = Fact.objects.create(facts=cat_fact)
+        fact_created.save()
+
+    
+    
+    if request.method != 'GET':
+        return redirect('/')
+    
+    cat_facts_response = requests.get(
+      CAT_FACTS_API_ENDPOINT(
+        CAT_FACTS_MAX_LENGTH,
+        CAT_FACTS_LIMIT
+      )
+    )
+    if cat_facts_response.status_code != 200:
+        return redirect('/')
+    
+    for fact in map(lambda f: f['fact'], cat_facts_response.json()['data']):
+        create_fact(fact)
+
+    return render(
+      request, 
+      'index.html', 
+      {
+        'facts': Fact.objects.all()[:5]
+      }
+    )
+
+    # Aqui acaba mi propuesta de implementación
+
     lista = []
     for i in range (10):
         if request.method == 'GET':
@@ -43,23 +92,44 @@ def index(request):
 
 #@login_required(login_url='signin')
 def like_post(request):
+    '''
+    Mismo tema del docstring del método index
+    '''
     username = request.user.username
     id_facts = request.GET.get('id_facts')
 
     fact = Fact.objects.get(id_facts=id_facts)
 
-    like_filter = Likes.objects.filter(id_facts=id_facts, username=username).first()
+    # Para que quede más legible
+    like_filter = Likes.objects.filter(
+      id_facts=id_facts, 
+      username=username
+    ).first()
+    
+    # Mi propuesta
 
     if like_filter == None:
         new_like = Likes.objects.create(id_facts=id_facts, username=username)
         new_like.save()
-        fact.no_of_likes = fact.no_of_likes+1
-        fact.save()
-        return redirect('index')
+        fact.no_of_likes += 1
     else:
         like_filter.delete()
-        fact.no_of_likes = fact.no_of_likes-1
-        fact.save
+        fact.no_of_likes -= 1
+    fact.save()
+    return redirect('index')
+
+    # Fin de mi propuesta
+
+    if like_filter == None:
+        new_like = Likes.objects.create(id_facts=id_facts, username=username)
+        new_like.save()
+        fact.no_of_likes += 1  # Más sucinto
+        fact.save()
+        return redirect('index')  # Comportamiento duplicado
+    else:
+        like_filter.delete()
+        fact.no_of_likes -= 1  # Más sucinto
+        fact.save()  # Se había escapado el paréntesis
         return redirect('index')
 
 def signup(request):
